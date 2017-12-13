@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html style="width:100%;height:100%;">
+<head>
+    <meta charset="utf-8">
+    <title>北京地区空气质量</title>
+    <link href="style.css" type="text/css" rel="stylesheet">
+    <script src="https://webapi.amap.com/js/marker2.js"></script>
+</head>
+
+<body style="width:100%;height:100%;margin:0;">
+<div id="myPageTop">
+    <label align="center">输入地点查询空气状况：</label> <input  align="center" id="tipinput"/>
+</div>
+<div id="map" style="width:100%;height:100%;">
+</div>
+    <script type="text/javascript" src="http://webapi.amap.com/maps?v=1.4.1&key=bb7405619e7062aebad53b69f08ace3f"></script>
+    <script src="js/jquery-3.2.1.js"></script>
+    <script type="text/javascript">
+            //var dataOBJ = new String();
+            //alert(points[0].count);
+            var test = 60;
+            var map = new AMap.Map('map',{
+                mapStyle: 'amap://styles/grey',
+                resizeEnable: true,
+                zooms: [3,13]
+            });
+            //////////////////////////////////////////////////////////
+            /*AMap.service('AMap.Weather', function() {
+                var weather = new AMap.Weather();
+                //查询实时天气信息, 查询的城市到行政级别的城市，如朝阳区、杭州市
+                weather.getLive('昌平区', function(err, data) {
+                    if (!err) {
+                        var str = [];
+                        str.push('<div style="color: #3366FF;">实时天气' + '</div>');
+                        str.push('<div>城市/区：' + data.city + '</div>');
+                        str.push('<div>温度：' + data.temperature + '℃</div>');
+                        str.push('<div>发布时间：' + data.reportTime + '</div>');
+                        var marker = new AMap.Marker({
+                            map: map,
+                            position: map.getCenter()});
+                        var infoWin = new AMap.InfoWindow({
+                            content: str.join(''),
+                            offset: new AMap.Pixel(0, -20)
+                        });
+                        infoWin.open(map, marker.getPosition());
+                        marker.on('mouseover', function() {
+                            infoWin.open(map, marker.getPosition());
+                        });
+                    }
+                });
+            });*/
+            //////////////////////////////////////////////////////////////////////////////////////////////////////////
+            var geolocation;
+            map.plugin('AMap.Geolocation', function() {
+                geolocation = new AMap.Geolocation({
+                    enableHighAccuracy: true,//使用高精度定位
+                    timeout: 10000,          //超过10秒后停止定位
+                    buttonOffset: new AMap.Pixel(10, 20),//定位按钮与设置的停靠位置的偏移量
+                    zoomToAccuracy: true,      //定位成功后范围视野内可见
+                    buttonPosition:'RB'
+                });
+                map.addControl(geolocation);
+                geolocation.getCurrentPosition();
+                AMap.event.addListener(geolocation, 'complete', onComplete);//返回定位信息
+                AMap.event.addListener(geolocation, 'error', onError);      //返回定位出错信息
+            });
+            //解析定位结果
+            function onComplete(data) {
+                var str=['定位成功'];
+                str.push('经度：' + data.position.getLng());
+                str.push('纬度：' + data.position.getLat());
+                if(data.accuracy){
+                    str.push('精度：' + data.accuracy + ' 米');
+                }//如为IP精确定位结果则没有精度信息
+                str.push('是否经过偏移：' + (data.isConverted ? '是' : '否'));
+                document.getElementById('tip').innerHTML = str.join('<br>');
+            }
+            //解析定位错误信息
+            function onError(data) {
+                document.getElementById('tip').innerHTML = '定位失败';
+            }
+            //////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //热力图
+
+            AMap.plugin('AMap.ToolBar',function () {
+                map.addControl(new AMap.ToolBar());
+            })
+            var heatmap;
+            var points =[
+                {"lng":116.368034,"lat":39.879606,"count":1},//万寿西宫
+                {"lng":116.2234,"lat":40.29596,"count":1},//定陵
+                {"lng":116.4246,"lat":39.93041,"count":1},//东四
+                {"lng":116.4067,"lat":39.88241,"count":1},//天坛
+                {"lng":116.4647,"lat":39.94146,"count":1},//农展馆
+                {"lng":116.3623,"lat":39.93269,"count":1},//官园
+                {"lng":116.2982,"lat":39.95975,"count":1},//海淀区万柳
+                {"lng":116.6411,"lat":40.15034,"count":1},//顺义新城
+                {"lng":116.6338,"lat":40.31929,"count":1},//怀柔镇
+                {"lng":116.2202,"lat":40.22293,"count":1},//昌平镇
+                {"lng":116.3995,"lat":39.98365,"count":1},//奥体中心
+                {"lng":116.1933,"lat":39.91163,"count":1}//古城
+
+            ];
+            var KEY = "5j1znBVAsnSf5xQyNQyq"; // 测试用key，请更换成您自己的 Key
+            var API = "http://www.pm25.in/api/querys/pm2_5.json";
+            var CITY = "beijing"; // 因为参数使用中文需要encode，所以推荐开发者city参数尽量使用拼音；
+            var PMjsonpCallbackdemo = function (data) {
+                var life = data;//取出Json数据并存入life中
+                for(var i=0;i<=11;i++){
+                    console.log(life[i].aqi);
+                    points[i].count = life[i].aqi;
+                    console.log(points[i].count);
+                };
+                map.plugin(["AMap.Heatmap"],function() {      //加载热力图插件
+                    heatmap = new AMap.Heatmap(map, {
+                        radius: 35, //给定半径
+                        opacity: [0, 0.8],
+                        gradient:{
+                            0.5: 'blue',
+                            0.65: 'rgb(117,211,248)',
+                            0.7: 'rgb(0, 255, 0)',
+                            0.9: '#ffea00',
+                            1.0: 'red'
+                        },
+                        zooms:[9,18]
+
+                    });
+                    heatmap.setDataSet({data:points,max:100}); //设置热力图数据集
+                    //具体参数见接口文档
+                });
+                map.plugin(['AMap.Autocomplete','AMap.PlaceSearch'],function () {
+                    var autoOptions = {
+                        input: "tipinput"
+                    };
+                    var auto = new AMap.Autocomplete(autoOptions);
+                    var placeSearch = new AMap.PlaceSearch({
+                        map: map
+                    });  //构造地点查询类
+                    AMap.event.addListener(auto, "select",//注册监听，当选中某条记录时会触发
+                        function(e) {
+                            placeSearch.setCity(e.poi.adcode);
+                            placeSearch.search(e.poi.name);  //关键字查询查询
+                            placeSearch.getDetails(e.poi.id, function(status, result) {
+                                if (status === 'complete' && result.info === 'OK') {
+                                    placeSearch_CallBack(result);
+                                }
+                            });
+                            console.log(e.poi.adcode);
+                            console.log(e.poi.location);
+                            var aqi = 1;
+                            if(e.poi.adcode == 110114 && e.poi.location.lat < 40.257541){//昌平 十三陵以南
+                                aqi = points[9].count;
+                            }
+                            else if(e.poi.adcode == 110114 && e.poi.location.lat >= 40.257541){//昌平 十三陵以北
+                                aqi = points[1].count;
+                            }
+                            else if(e.poi.adcode == 110102  && e.poi.location.lat <= 39.912433){//西城区 万寿西宫
+                                aqi = points[0].count;
+                            }
+                            else if(e.poi.adcode == 110102  && e.poi.location.lat >= 39.912433){//西城区 官园
+                                aqi = points[5].count;
+                            }
+                            else if(e.poi.adcode == 110101  && e.poi.location.lat >= 39.903767){//东城区 东四
+                                aqi = points[2].count;
+                            }
+                            else if(e.poi.adcode == 110101  && e.poi.location.lat <= 39.903767){//东城区 天坛
+                                aqi = points[3].count;
+                            }
+                            else if(e.poi.adcode == 110105  && ((e.poi.location.lat-39.94146)*(e.poi.location.lat-39.94146)+(e.poi.location.lng-116.4647)*(e.poi.location.lng-116.4647)) < ((e.poi.location.lat-39.98365)*(e.poi.location.lat-39.98365)+(e.poi.location.lng-116.3995)*(e.poi.location.lng-116.3995))){//朝阳区 农展馆
+                                aqi = points[4].count;
+                            }
+                            else if(e.poi.adcode == 110105  && ((e.poi.location.lat-39.94146)*(e.poi.location.lat-39.94146)+(e.poi.location.lng-116.4647)*(e.poi.location.lng-116.4647)) >= ((e.poi.location.lat-39.98365)*(e.poi.location.lat-39.98365)+(e.poi.location.lng-116.3995)*(e.poi.location.lng-116.3995))){//朝阳区 奥体中心
+                                aqi = points[10].count;
+                            }
+                            else if(e.poi.adcode == 110108){//海淀区 海淀区万柳
+                                aqi = points[6].count;
+                            }
+                            else if(e.poi.adcode == 110113){//顺义 顺义新城
+                                aqi = points[7].count;
+                            }
+                            else if(e.poi.adcode == 110116){//怀柔区 怀柔镇
+                                aqi = points[8].count;
+                            }
+                            else if(e.poi.adcode == 110107){//石景山区 古城
+                                aqi = points[11].count;
+                            }
+                            content = [];
+                            content.push("AQI:"+aqi);
+                            strlen = e.poi.name.length * 16 + 30;
+                            var infoWindow = new AMap.InfoWindow({
+                                autoMove: true,
+                                isCustom: true,  //使用自定义窗体
+                                content: createInfoWindow(e.poi.name, content.join("<br/>"),strlen),
+                                offset: {x: 0, y: -30}
+                            });
+                            //回调函数
+                            function placeSearch_CallBack(data) {
+                                var poiArr = data.poiList.pois;
+                                //添加marker
+                                var marker = new AMap.Marker({
+                                    map: map,
+                                    position: poiArr[0].location
+                                });
+                                map.setCenter(marker.getPosition());
+                                infoWindow.open(map, marker.getPosition());
+                            }
+                        });
+
+                });
+
+                //构建自定义信息窗体
+                function createInfoWindow(title, content,strlen) {
+                    var info = document.createElement("div");
+                    info.className = "info";
+
+                    //可以通过下面的方式修改自定义窗体的宽高
+                    //info.style.width = "400px";
+                    // 定义顶部标题
+                    var top = document.createElement("div");
+                    var titleD = document.createElement("div");
+                    var closeX = document.createElement("img");
+                    top.className = "info-top";
+                    titleD.innerHTML = title;
+                    closeX.src = "https://webapi.amap.com/images/close2.gif";
+                    closeX.onclick = closeInfoWindow;
+                    info.style.width = strlen+"px";
+                    info.style.height = "50px";
+
+
+                    top.appendChild(titleD);
+                    top.appendChild(closeX);
+                    info.appendChild(top);
+
+                    // 定义中部内容
+                    var middle = document.createElement("div");
+                    middle.className = "info-middle";
+                    middle.style.backgroundColor = 'white';
+                    middle.innerHTML = content;
+                    info.appendChild(middle);
+
+                    return info;
+                }
+
+                //关闭信息窗体
+                function closeInfoWindow() {
+                    map.clearInfoWindow();
+                }
+                ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+                ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+                ////////////////////////////////////////////////////////////////////////////////////////////////////
+                var DivColor = [];
+                DivColor.push({BGColor:'#32CD32',FontColor:'#FFFFFF'});
+                DivColor.push({BGColor:'#EEEE00',FontColor:'black'});
+                DivColor.push({BGColor:'#FFA000',FontColor:'#FFFFFF'});
+                DivColor.push({BGColor:'#FF0000',FontColor:'#FFFFFF'});
+                DivColor.push({BGColor:'#660099',FontColor:'#FFFFFF'});
+                DivColor.push({BGColor:'#000000',FontColor:'#FFFFFF'});
+
+                var createDiv = function(div,i){						//6种创建marker的方式，对应6种空气质量情况
+                    div.className = 'circle';
+                    div.style.backgroundColor = DivColor[i].BGColor;
+                    div.style.color = DivColor[i].FontColor;
+                }
+
+                var createMarker = function(data,hide) {                //TODO 这个data对应的是上面的points，就到时用createMarker时直接用createMarker(points[])就行
+                    var div = document.createElement('div');            //createElement()方法可以创建元素节点
+                    div.innerHTML = data.count || 0;					//innerHTML属性设置或返回表格行的开始和结束标签之间的HTML
+
+                    if(data.count <= 50){createDiv(div,0);}
+                    else if(data.count <= 100){createDiv(div,1);}
+                    else if(data.count <= 150){createDiv(div,2);}
+                    else if(data.count <= 200){createDiv(div,3);}
+                    else if(data.count <= 300){createDiv(div,4);}
+                    else {createDiv(div,5);}							//TODO 创建marker是改变颜色完成--------------------------
+
+                    var marker = new AMap.Marker({                      //创建marker对象
+                        content: div,                                   //点标记对象marker的样式
+                        //title:data.name,                                //标题属性
+                        position: [data.lng,data.lat],               //spilt()用于把一个字符串分割成字符串数组，从''中的参数指定的地方分割stringObject
+                        offset: new AMap.Pixel(-24, 5),                 //位置偏移量，(0,0)时marker左上角对准position的位置，该属性表示将marker移动多少像素后可以使锚点对准position
+                        zIndex: data.count                              //点标记的叠加顺序，地图上存在多个点标记叠加时，通过该属性使级别较高的点标记在上层显示
+                    });
+                    marker.subMarkers = [];                             //用marker.subMarkers类数组存储marker下的子marker
+                    //以上不用改
+                    if(!hide){											//这个hide用于隐藏子一级的地点，在下一个if语句中有调用
+                        marker.setMap(map)								//setMap(map:Map)：为Marker指定目标显示地图。当参数值取null时，地图上移除当前Marker：setMap(null)
+                    }
+                    return marker;
+                }
+
+                var _onZoomEnd = function(e) {              // zoom越小代表放大倍数越小
+                    if (map.getZoom() >= 10) {                //缩放停止时如果缩放等级小于6，那就移除行政区级marker，添加市级marker
+
+                        map.add(markers);
+                    }
+                    if(map.getZoom() < 10){
+                        map.remove(markers);
+                    }
+                }
+
+
+                var _onClick = function(e) {
+                    if(e.target.subMarkers.length){         //如果点选的对象有下级地点的话
+                        map.add(e.target.subMarkers);       //加载它的下级对象
+                        map.setFitView(e.target.subMarkers);//setFitView方法用来将地图调整到合适的范围来显示我们需要展示的markers
+                        map.remove(markers)                 //移除所有高一级的标记
+                    }
+                }
+                var markers = []; //province见Demo引用的JS文件
+                for (var i = 0; i < points.length; i += 1) {     //加载所有的省份（类）到marker数组中，这是个类数组，同时省份的subDistricts属性也是个类数组
+                    var marker = createMarker(points[i]);        //创建一个marker对象，这个对象的属性有些类似指针，注意在这里没有hide，跟上面的那个创建子Marker的createMarker语句不一样
+                    markers.push(marker);
+                    AMap.event.addListener(marker, 'click', _onClick);
+                }
+                //map.setFitView();
+                AMap.event.addListener(map, 'zoomend', _onZoomEnd); //zoomend表示缩放停止，为map对象注册'zoomend'事件，缩放停止时地图触发_onZoomEnd函数
+                //根据_onZoomEnd函数，缩放停止时如果缩放等级小于6，那就移除行政区级marker，添加市级marker
+                //TODO 根据zoom缩放的功能可以去掉，因为我们的数据是以监测站划分的，不过介于有信息窗体的那个功能，其实监测站之于行政区，就类同于行政区之于市，市之于省，因此还是要做的，而且做法类同，不过需要的树结构的层次就变多了
+                var AQI_FontColor = function(data){
+                    if(data.count <= 50 || data.count > 150) return '#00000';
+                    else return '#FFFFFF';
+                }
+            };
+            var url = API + "?city=" + CITY + "&" + "token=" + KEY + "&callback=PMjsonpCallbackdemo";
+            var newScript = document.createElement('script');
+            newScript.type = 'text/javascript';
+            newScript.src = url;
+            $('body').append(newScript);
+            //////////////////////////////////////////////////////////////////////////////////////////////////////////
+            //输入提示
+</script>
+</body>
+</html>
