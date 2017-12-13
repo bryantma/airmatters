@@ -2,7 +2,7 @@
 <html style="width:100%;height:100%;">
 <head>
     <meta charset="utf-8">
-    <title>北京地区空气质量</title>
+    <title>全国主要城市空气质量</title>
     <link href="style.css" type="text/css" rel="stylesheet">
     <script src="https://webapi.amap.com/js/marker2.js"></script>
 </head>
@@ -15,100 +15,107 @@
 </div>
     <script type="text/javascript" src="http://webapi.amap.com/maps?v=1.4.1&key=bb7405619e7062aebad53b69f08ace3f"></script>
     <script src="js/jquery-3.2.1.js"></script>
-    <script type="text/javascript">
-            //var dataOBJ = new String();
-            //alert(points[0].count);
-            var test = 60;
-            var map = new AMap.Map('map',{
-                mapStyle: 'amap://styles/grey',
-                resizeEnable: true,
-                zooms: [3,13]
-            });
-            //////////////////////////////////////////////////////////
-            /*AMap.service('AMap.Weather', function() {
-                var weather = new AMap.Weather();
-                //查询实时天气信息, 查询的城市到行政级别的城市，如朝阳区、杭州市
-                weather.getLive('昌平区', function(err, data) {
-                    if (!err) {
-                        var str = [];
-                        str.push('<div style="color: #3366FF;">实时天气' + '</div>');
-                        str.push('<div>城市/区：' + data.city + '</div>');
-                        str.push('<div>温度：' + data.temperature + '℃</div>');
-                        str.push('<div>发布时间：' + data.reportTime + '</div>');
-                        var marker = new AMap.Marker({
-                            map: map,
-                            position: map.getCenter()});
-                        var infoWin = new AMap.InfoWindow({
-                            content: str.join(''),
-                            offset: new AMap.Pixel(0, -20)
-                        });
-                        infoWin.open(map, marker.getPosition());
-                        marker.on('mouseover', function() {
-                            infoWin.open(map, marker.getPosition());
-                        });
-                    }
+<script type="text/javascript">
+    var test = 60;
+    var map = new AMap.Map('map',{
+        mapStyle: 'amap://styles/grey',
+        resizeEnable: true,
+        zooms: [3,13]
+    });
+    //////////////////////////////////////////////////////////
+    /*AMap.service('AMap.Weather', function() {
+        var weather = new AMap.Weather();
+        //查询实时天气信息, 查询的城市到行政级别的城市，如朝阳区、杭州市
+        weather.getLive('昌平区', function(err, data) {
+            if (!err) {
+                var str = [];
+                str.push('<div style="color: #3366FF;">实时天气' + '</div>');
+                str.push('<div>城市/区：' + data.city + '</div>');
+                str.push('<div>温度：' + data.temperature + '℃</div>');
+                str.push('<div>发布时间：' + data.reportTime + '</div>');
+                var marker = new AMap.Marker({
+                    map: map,
+                    position: map.getCenter()});
+                var infoWin = new AMap.InfoWindow({
+                    content: str.join(''),
+                    offset: new AMap.Pixel(0, -20)
                 });
-            });*/
-            //////////////////////////////////////////////////////////////////////////////////////////////////////////
-            var geolocation;
-            map.plugin('AMap.Geolocation', function() {
-                geolocation = new AMap.Geolocation({
-                    enableHighAccuracy: true,//使用高精度定位
-                    timeout: 10000,          //超过10秒后停止定位
-                    buttonOffset: new AMap.Pixel(10, 20),//定位按钮与设置的停靠位置的偏移量
-                    zoomToAccuracy: true,      //定位成功后范围视野内可见
-                    buttonPosition:'RB'
+                infoWin.open(map, marker.getPosition());
+                marker.on('mouseover', function() {
+                    infoWin.open(map, marker.getPosition());
                 });
-                map.addControl(geolocation);
-                geolocation.getCurrentPosition();
-                AMap.event.addListener(geolocation, 'complete', onComplete);//返回定位信息
-                AMap.event.addListener(geolocation, 'error', onError);      //返回定位出错信息
-            });
-            //解析定位结果
-            function onComplete(data) {
-                var str=['定位成功'];
-                str.push('经度：' + data.position.getLng());
-                str.push('纬度：' + data.position.getLat());
-                if(data.accuracy){
-                    str.push('精度：' + data.accuracy + ' 米');
-                }//如为IP精确定位结果则没有精度信息
-                str.push('是否经过偏移：' + (data.isConverted ? '是' : '否'));
-                document.getElementById('tip').innerHTML = str.join('<br>');
             }
-            //解析定位错误信息
-            function onError(data) {
-                document.getElementById('tip').innerHTML = '定位失败';
-            }
-            //////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //热力图
+        });
+    });*/
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////
+    var geolocation;
+    map.plugin('AMap.Geolocation', function() {
+        geolocation = new AMap.Geolocation({
+            enableHighAccuracy: true,//使用高精度定位
+            timeout: 10000,          //超过10秒后停止定位
+            buttonOffset: new AMap.Pixel(10, 20),//定位按钮与设置的停靠位置的偏移量
+            zoomToAccuracy: true,      //定位成功后范围视野内可见
+            buttonPosition:'RB'
+        });
+        map.addControl(geolocation);
+        geolocation.getCurrentPosition();
+        AMap.event.addListener(geolocation, 'complete', onComplete);//返回定位信息
+        AMap.event.addListener(geolocation, 'error', onError);      //返回定位出错信息
+    });
+    //解析定位结果
+    function onComplete(data) {
+        var str=['定位成功'];
+        str.push('经度：' + data.position.getLng());
+        str.push('纬度：' + data.position.getLat());
+        if(data.accuracy){
+            str.push('精度：' + data.accuracy + ' 米');
+        }//如为IP精确定位结果则没有精度信息
+        str.push('是否经过偏移：' + (data.isConverted ? '是' : '否'));
+        document.getElementById('tip').innerHTML = str.join('<br>');
+    }
+    //解析定位错误信息
+    function onError(data) {
+        document.getElementById('tip').innerHTML = '定位失败';
+    }
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //热力图
 
-            AMap.plugin('AMap.ToolBar',function () {
-                map.addControl(new AMap.ToolBar());
-            })
-            var heatmap;
-            var points =[
-                {"lng":116.368034,"lat":39.879606,"count":1},//万寿西宫
-                {"lng":116.2234,"lat":40.29596,"count":1},//定陵
-                {"lng":116.4246,"lat":39.93041,"count":1},//东四
-                {"lng":116.4067,"lat":39.88241,"count":1},//天坛
-                {"lng":116.4647,"lat":39.94146,"count":1},//农展馆
-                {"lng":116.3623,"lat":39.93269,"count":1},//官园
-                {"lng":116.2982,"lat":39.95975,"count":1},//海淀区万柳
-                {"lng":116.6411,"lat":40.15034,"count":1},//顺义新城
-                {"lng":116.6338,"lat":40.31929,"count":1},//怀柔镇
-                {"lng":116.2202,"lat":40.22293,"count":1},//昌平镇
-                {"lng":116.3995,"lat":39.98365,"count":1},//奥体中心
-                {"lng":116.1933,"lat":39.91163,"count":1}//古城
+    AMap.plugin('AMap.ToolBar',function () {
+        map.addControl(new AMap.ToolBar());
+    })
+    var heatmap;
+    var points =[
+        {"lng":116.368034,"lat":39.879606,"count":1},//万寿西宫
+        {"lng":116.2234,"lat":40.29596,"count":1},//定陵
+        {"lng":116.4246,"lat":39.93041,"count":1},//东四
+        {"lng":116.4067,"lat":39.88241,"count":1},//天坛
+        {"lng":116.4647,"lat":39.94146,"count":1},//农展馆
+        {"lng":116.3623,"lat":39.93269,"count":1},//官园
+        {"lng":116.2982,"lat":39.95975,"count":1},//海淀区万柳
+        {"lng":116.6411,"lat":40.15034,"count":1},//顺义新城
+        {"lng":116.6338,"lat":40.31929,"count":1},//怀柔镇
+        {"lng":116.2202,"lat":40.22293,"count":1},//昌平镇
+        {"lng":116.3995,"lat":39.98365,"count":1},//奥体中心
+        {"lng":116.1933,"lat":39.91163,"count":1}//古城
 
-            ];
-            var KEY = "5j1znBVAsnSf5xQyNQyq"; // 测试用key，请更换成您自己的 Key
-            var API = "http://www.pm25.in/api/querys/pm2_5.json";
-            var CITY = "beijing"; // 因为参数使用中文需要encode，所以推荐开发者city参数尽量使用拼音；
-            var PMjsonpCallbackdemo = function (data) {
-                var life = data;//取出Json数据并存入life中
+    ];
+    function loadXMLDoc()
+    {
+        var xmlhttp;
+        if (window.XMLHttpRequest)
+        {// code for IE7+, Firefox, Chrome, Opera, Safari
+            xmlhttp=new XMLHttpRequest();
+        } else{// code for IE6, IE5
+            xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+        }
+        xmlhttp.responseType = 'json';
+        xmlhttp.onreadystatechange=function(){
+            if (xmlhttp.readyState==4 && xmlhttp.status==200){
+                /////////////////////////////////////////////////////////////////////////////
+                //console.log(xmlhttp.response.HeWeather6[0].air_now_station[0].aqi);
                 for(var i=0;i<=11;i++){
-                    console.log(life[i].aqi);
-                    points[i].count = life[i].aqi;
+                    //console.log(life[i].aqi);
+                    points[i].count = xmlhttp.response.HeWeather6[0].air_now_station[i].aqi;
                     console.log(points[i].count);
                 };
                 map.plugin(["AMap.Heatmap"],function() {      //加载热力图插件
@@ -322,14 +329,12 @@
                     if(data.count <= 50 || data.count > 150) return '#00000';
                     else return '#FFFFFF';
                 }
-            };
-            var url = API + "?city=" + CITY + "&" + "token=" + KEY + "&callback=PMjsonpCallbackdemo";
-            var newScript = document.createElement('script');
-            newScript.type = 'text/javascript';
-            newScript.src = url;
-            $('body').append(newScript);
-            //////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //输入提示
+            }
+        }
+        xmlhttp.open("GET","https://free-api.heweather.com/s6/air/now?location=beijing&key=0e86208aecdb4de180684e2d5a31b995",true);
+        xmlhttp.send();
+    }
+    loadXMLDoc();
 </script>
 </body>
 </html>
